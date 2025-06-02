@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Services from './pages/Services';
 import Users from './pages/Users';
+import News from './pages/News';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import './App.css';
@@ -46,6 +47,7 @@ const App: React.FC = () => {
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/services" element={<Services />} />
                       <Route path="/users" element={<Users />} />
+                      <Route path="/news" element={<News />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<Navigate to="/" />} />
                     </Routes>

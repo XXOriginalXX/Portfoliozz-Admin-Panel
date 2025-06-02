@@ -1,17 +1,16 @@
+// components/Layout.tsx
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Menu, 
-  X, 
   LayoutDashboard, 
   Package, 
   Users, 
   Settings, 
-  Bell, 
-  LogOut,
-  ChevronDown,
-  ChevronUp
+  LogOut, 
+  Menu, 
+  X,
+  Newspaper
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -19,215 +18,162 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Error logging out:', error);
     }
   };
 
-  const navItems = [
-    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Services', path: '/services', icon: <Package size={20} /> },
-    { name: 'Users', path: '/users', icon: <Users size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+  const navigation = [
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Services', href: '/services', icon: Package },
+    { name: 'Users', href: '/users', icon: Users },
+    { name: 'News', href: '/news', icon: Newspaper },
+    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
-  // Mock notifications
-  const notifications = [
-    { id: 1, text: 'New user registered', time: '2 minutes ago' },
-    { id: 2, text: 'New service inquiry', time: '1 hour ago' },
-    { id: 3, text: 'System update completed', time: '3 hours ago' },
-  ];
+  const isCurrentPath = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar for mobile */}
-      <div
-        className={`fixed inset-0 z-40 lg:hidden ${
-          sidebarOpen ? 'block' : 'hidden'
-        }`}
-        onClick={closeSidebar}
-      >
-        <div className="absolute inset-0 bg-gray-600 opacity-75"></div>
+    return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile sidebar */}
+      <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="absolute top-0 right-0 -mr-12 pt-2">
+            <button
+              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+          </div>
+          <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+            <div className="flex-shrink-0 flex items-center px-4">
+              <h1 className="text-xl font-bold text-gray-900">Portfoliozz Admin</h1>
+            </div>
+            <nav className="mt-5 px-2 space-y-1">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`${
+                      isCurrentPath(item.href)
+                        ? 'bg-blue-100 text-blue-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon
+                      className={`${
+                        isCurrentPath(item.href) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      } mr-4 h-6 w-6`}
+                    />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+            <div className="flex-shrink-0 w-full group block">
+              <div className="flex items-center">
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                    {user?.email}
+                  </p>
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs font-medium text-gray-500 group-hover:text-gray-700 flex items-center"
+                  >
+                    <LogOut className="mr-1 h-3 w-3" />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:z-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between h-16 px-6 border-b">
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold text-blue-600">Portfoliozz</h1>
+      {/* Static sidebar for desktop */}
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+        <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
+          <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+            <div className="flex items-center flex-shrink-0 px-4">
+              <h1 className="text-xl font-bold text-gray-900">Portfoliozz Admin</h1>
+            </div>
+            <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`${
+                      isCurrentPath(item.href)
+                        ? 'bg-blue-100 text-blue-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
+                  >
+                    <Icon
+                      className={`${
+                        isCurrentPath(item.href) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                      } mr-3 h-6 w-6`}
+                    />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
+          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+            <div className="flex-shrink-0 w-full group block">
+              <div className="flex items-center">
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                    {user?.email}
+                  </p>
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs font-medium text-gray-500 group-hover:text-gray-700 flex items-center"
+                  >
+                    <LogOut className="mr-1 h-3 w-3" />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="lg:pl-64 flex flex-col flex-1">
+        <div className="sticky top-0 z-10 lg:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-50">
           <button
-            className="lg:hidden text-gray-500 hover:text-gray-700"
-            onClick={closeSidebar}
+            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            onClick={() => setSidebarOpen(true)}
           >
-            <X size={20} />
+            <Menu className="h-6 w-6" />
           </button>
         </div>
-
-        <div className="px-2 py-4">
-          <ul className="space-y-1">
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center px-4 py-3 text-sm rounded-lg transition-colors ${
-                    location.pathname === item.path
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  onClick={closeSidebar}
-                >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="absolute bottom-0 w-full border-t border-gray-200">
-          <div className="px-4 py-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center w-full px-4 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              <LogOut size={18} className="mr-3" />
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Top Navigation */}
-        <header className="flex items-center justify-between h-16 px-6 bg-white border-b">
-          <div className="flex items-center">
-            <button
-              className="text-gray-500 lg:hidden"
-              onClick={toggleSidebar}
-            >
-              <Menu size={24} />
-            </button>
-            <div className="ml-4 lg:ml-0">
-              <h2 className="text-lg font-medium text-gray-900">
-                {navItems.find((item) => item.path === location.pathname)?.name || 'Admin Panel'}
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            {/* Notifications Dropdown */}
-            <div className="relative">
-              <button
-                className="p-1 text-gray-500 rounded-full hover:bg-gray-100 focus:outline-none"
-                onClick={() => {
-                  setNotificationsOpen(!notificationsOpen);
-                  setProfileOpen(false);
-                }}
-              >
-                <Bell size={20} />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-
-              {notificationsOpen && (
-                <div className="absolute right-0 w-72 mt-2 bg-white rounded-md shadow-lg z-50">
-                  <div className="px-4 py-2 border-b">
-                    <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                      >
-                        <p className="text-sm text-gray-800">{notification.text}</p>
-                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="px-4 py-2 text-center border-t">
-                    <a href="#" className="text-xs text-blue-600 hover:underline">
-                      View all notifications
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Profile Dropdown */}
-            <div className="relative">
-              <button
-                className="flex items-center text-sm text-gray-700 focus:outline-none"
-                onClick={() => {
-                  setProfileOpen(!profileOpen);
-                  setNotificationsOpen(false);
-                }}
-              >
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                  {user?.email?.charAt(0).toUpperCase() || 'A'}
-                </div>
-                <span className="ml-2 hidden sm:block">{user?.email?.split('@')[0] || 'Admin'}</span>
-                {profileOpen ? (
-                  <ChevronUp size={16} className="ml-1" />
-                ) : (
-                  <ChevronDown size={16} className="ml-1" />
-                )}
-              </button>
-
-              {profileOpen && (
-                <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg z-50">
-                  <div className="py-1">
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Your Profile
-                    </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Settings
-                    </a>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1">
           {children}
         </main>
       </div>
